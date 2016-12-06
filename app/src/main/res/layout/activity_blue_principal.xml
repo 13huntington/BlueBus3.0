@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.BlueBlusPack.crist.bluebus.Aplicacion.Principal">
+
+  <Spinner
+      android:id="@+id/spCorredor"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_margin="@dimen/activity_vertical_margin">
+
+  </Spinner>
+    <Spinner
+        android:id="@+id/spLinea"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/spCorredor"
+        android:layout_margin="@dimen/activity_vertical_margin"
+        >
+
+    </Spinner>
+
+  <Button
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="Buscar"
+      android:id="@+id/btnBuscar"
+      android:onClick="buscarA"
+      android:layout_below="@+id/spColectivosAgregados"
+      android:layout_centerHorizontal="true"
+      android:layout_marginTop="46dp" />
+
+  <RadioGroup
+      android:id="@+id/opcionesColectivo"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:orientation="horizontal"
+      android:layout_below="@+id/spLinea"
+      android:layout_centerHorizontal="true">
+
+
+    <RadioButton
+        android:text="Ida"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/radioButtonIda"
+        android:checked="true"
+        android:shadowColor="@color/colorPrimary"
+        />
+
+    <RadioButton
+        android:text="Vuelta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/radioButtonVuelta"
+        android:layout_below="@+id/radioButtonIda"
+        android:checked="false"
+        android:layout_margin="@dimen/activity_horizontal_margin"
+         />
+  </RadioGroup>
+
+  <Spinner
+      android:id="@+id/spColectivosAgregados"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginLeft="@dimen/activity_vertical_margin"
+      android:layout_marginRight="@dimen/activity_vertical_margin"
+      android:layout_marginTop="16dp"
+      android:layout_below="@+id/btnAgregar"
+      android:layout_alignStart="@+id/spLinea">
+
+  </Spinner>
+
+  <Button
+      android:layout_height="wrap_content"
+      android:text="Agregar"
+      android:id="@+id/btnAgregar"
+      android:textAlignment="center"
+      android:onClick="agregarUnidad"
+      android:elevation="0dp"
+      android:layout_width="wrap_content"
+      android:layout_below="@+id/opcionesColectivo"
+      android:layout_alignStart="@+id/spColectivosAgregados"
+      android:layout_marginStart="27dp" />
+
+  <Button
+      android:layout_height="wrap_content"
+      android:text=" Limpiar "
+      android:id="@+id/btnLimpiar"
+      android:onClick="limpiarSeleccion"
+      android:layout_width="wrap_content"
+      android:layout_marginEnd="21dp"
+      android:layout_alignEnd="@+id/spColectivosAgregados"
+      android:layout_below="@+id/opcionesColectivo" />
+
+
+</RelativeLayout>
