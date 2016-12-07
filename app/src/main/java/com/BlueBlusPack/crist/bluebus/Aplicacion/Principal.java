@@ -7,10 +7,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -22,12 +25,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.BlueBlusPack.crist.bluebus.Datos.GestorDatos;
 import com.BlueBlusPack.crist.bluebus.Entidades.Corredor;
 import com.BlueBlusPack.crist.bluebus.Entidades.Linea;
 import com.BlueBlusPack.crist.bluebus.Entidades.LineaEsperada;
 import com.BlueBlusPack.crist.bluebus.R;
+import com.google.android.gms.appindexing.Thing;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -43,7 +48,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Principal extends AppCompatActivity  implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class Principal extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     protected Spinner spinnerCorredor, spinnerLinea, spinnerLineasSelec;
 
     Button btnBuscar, btnAgregar, btnLimpiar;
@@ -51,7 +56,6 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
     Bundle savedInstanceState;
     Vibrator vibrador;
     private GestorBLE gestorBLE;
-    private BluetoothAdapter mBluetoothAdapter;
     private int REQUEST_ENABLE_BT = 1;
     private GestorDatos gestorDatos;
     private ArrayList<LineaEsperada> lineasEsperadas;
@@ -59,6 +63,11 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
     protected final String TAG = "Busqueda";
     GoogleApiClient mGoogleApiClient;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    private GoogleApiClient client;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +86,7 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
         vuelta = (RadioButton) findViewById(R.id.radioButtonVuelta);
         addItemsOnSpinner();
         vibrador = (Vibrator) getSystemService(VIBRATOR_SERVICE);
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
@@ -98,6 +107,9 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
             builder.show();
         }
         solicitarUbicacion();
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     @Override
@@ -120,13 +132,12 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
                     });
                     builder.show();
                 }
-                return;
             }
         }
     }
 
 
-    public void detener(){
+    public void detener() {
         gestorBLE.stop();
         vibrador.vibrate(2500);
         habilitarBotones();
@@ -140,48 +151,67 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
             btnBuscar.setText("Detener");
             gestorBLE.find(this, lineasEsperadas);
         } else {
-            if(lineasEsperadas.size() > 0){
-                if(gestorBLE != null)
+            if (lineasEsperadas.size() > 0) {
+                if (gestorBLE != null)
                     gestorBLE.stop();
                 habilitarBotones();
                 btnBuscar.setText("Buscar");
-            }else {
-                //mostrar mensaje
+            } else {
+                this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Agregue al menos un colectivo", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
 
         }
     }
 
-    public void agregarUnidad(View v){
-        if(spinnerLinea.getSelectedItemPosition() >= 0){
-            LineaEsperada nuevaLinea = new LineaEsperada();
+    public void agregarUnidad(View v) {
+        if (spinnerLinea.getSelectedItemPosition() >= 0) {
             Linea lineaSeleccionada = (Linea) spinnerLinea.getSelectedItem();
-            nuevaLinea.setLinea(lineaSeleccionada.getNumero());
-            if(ida.isChecked()){
-                nuevaLinea.setSentido(LineaEsperada.IDA);
-            }else{
-                nuevaLinea.setSentido(LineaEsperada.VUELTA);
+            int nroLinea = lineaSeleccionada.getNumero();
+            String sentido;
+            if (ida.isChecked()) {
+                sentido = LineaEsperada.IDA;
+            } else {
+                sentido = LineaEsperada.VUELTA;
             }
-            if(!lineasEsperadas.contains(nuevaLinea))
+            final LineaEsperada nuevaLinea = new LineaEsperada(nroLinea, sentido);
+            if (!lineasEsperadas.contains(nuevaLinea))
                 lineasEsperadas.add(nuevaLinea);
             final ArrayAdapter<LineaEsperada> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, lineasEsperadas);
             dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             spinnerLineasSelec.setAdapter(dataAdapter);
+
+            this.runOnUiThread(new Runnable() {
+                public void run() {
+                    Toast.makeText(getApplicationContext(), "Colectivo " + nuevaLinea.toString() + " agregado", Toast.LENGTH_SHORT).show();
+                }
+            });
+
         }
     }
 
-    public void limpiarSeleccion(View v){
-        lineasEsperadas.clear();
-        spinnerLineasSelec.setAdapter(null);
-        /*spinnerCorredor.setSelection(0);
-        spinnerLinea.setAdapter(null);
-        if(ida.isChecked())
-            ida.setChecked(false);
-        if(vuelta.isChecked())
-            vuelta.setChecked(false);*/
+    public void quitarUnidad(View v) {
+        if (spinnerLineasSelec.getSelectedItemPosition() >= 0) {
+            if (spinnerLineasSelec.getSelectedItem() != null && lineasEsperadas.size() > 0) {
+                final LineaEsperada lineaSeleccionada = (LineaEsperada) spinnerLineasSelec.getSelectedItem();
+                lineasEsperadas.remove(lineaSeleccionada);
+                final ArrayAdapter<LineaEsperada> dataAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, lineasEsperadas);
+                dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                spinnerLineasSelec.setAdapter(dataAdapter);
+
+                this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "Colectivo " + lineaSeleccionada.toString() + " quitado", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+        }
     }
 
-    public void desHabilitarBotones(){
+    public void desHabilitarBotones() {
         spinnerCorredor.setEnabled(false);
         spinnerLinea.setEnabled(false);
         spinnerLineasSelec.setEnabled(false);
@@ -190,7 +220,8 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
         btnAgregar.setEnabled(false);
         btnLimpiar.setEnabled(false);
     }
-    public void habilitarBotones(){
+
+    public void habilitarBotones() {
         spinnerCorredor.setEnabled(true);
         spinnerLinea.setEnabled(true);
         ida.setEnabled(true);
@@ -225,28 +256,28 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
         });
     }
 
-    private ArrayList<Corredor> obtenerCorredores(){
+    private ArrayList<Corredor> obtenerCorredores() {
         return gestorDatos.obtenerCorredores();
     }
 
-    private ArrayList<Linea> obtenerLineas(int nroCorredor){
+    private ArrayList<Linea> obtenerLineas(int nroCorredor) {
         return gestorDatos.obtenerLineas(nroCorredor);
     }
 
-   private void solicitarUbicacion(){
-       mGoogleApiClient = new GoogleApiClient
-               .Builder(this)
-               .enableAutoManage(this, 34992, this)
-               .addApi(LocationServices.API)
-               .addConnectionCallbacks(this)
-               .addOnConnectionFailedListener(this)
-               .addApi(AppIndex.API).build();
+    private void solicitarUbicacion() {
+        mGoogleApiClient = new GoogleApiClient
+                .Builder(this)
+                .enableAutoManage(this, 34992, this)
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(AppIndex.API).build();
 
-       mGoogleApiClient.connect();
-       settingsrequest();
-   }
-    public void settingsrequest()
-    {
+        mGoogleApiClient.connect();
+        settingsrequest();
+    }
+
+    public void settingsrequest() {
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(30 * 1000);
@@ -261,7 +292,6 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
             @Override
             public void onResult(LocationSettingsResult result) {
                 final Status status = result.getStatus();
-                final LocationSettingsStates state = result.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
                         // All location settings are satisfied. The client can initialize location
@@ -286,6 +316,7 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
             }
         });
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -317,6 +348,42 @@ public class Principal extends AppCompatActivity  implements GoogleApiClient.Con
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    /**
+     * ATTENTION: This was auto-generated to implement the App Indexing API.
+     * See https://g.co/AppIndexing/AndroidStudio for more information.
+     */
+    public Action getIndexApiAction() {
+        Thing object = new Thing.Builder()
+                .setName("Principal Page") // TODO: Define a title for the content shown.
+                // TODO: Make sure this auto-generated URL is correct.
+                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
+                .build();
+        return new Action.Builder(Action.TYPE_VIEW)
+                .setObject(object)
+                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
+                .build();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        client.connect();
+        AppIndex.AppIndexApi.start(client, getIndexApiAction());
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        // ATTENTION: This was auto-generated to implement the App Indexing API.
+        // See https://g.co/AppIndexing/AndroidStudio for more information.
+        AppIndex.AppIndexApi.end(client, getIndexApiAction());
+        client.disconnect();
     }
 }
 

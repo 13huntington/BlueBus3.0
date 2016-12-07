@@ -24,10 +24,10 @@ public class GestorBLE {
 
 
 //Inicializa la busqueda del colectivo
-   public void find(Principal atc , ArrayList<LineaEsperada> lineasEsperadas){
+   public void find(Principal activity , ArrayList<LineaEsperada> lineasEsperadas){
         this.lineasEsperadas = lineasEsperadas;
         scanLeDevice(true);
-        activity =atc;
+        this.activity = activity;
     }
 
     public void stop(){
