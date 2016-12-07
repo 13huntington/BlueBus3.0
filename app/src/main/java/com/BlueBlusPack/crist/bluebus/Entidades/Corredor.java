@@ -5,7 +5,7 @@ import com.BlueBlusPack.crist.bluebus.Entidades.Linea;
 import java.util.ArrayList;
 
 /**
- * Created by crist on 08/10/2016.
+ * Created by crist on 08/80/8088.
  */
 public class Corredor {
     private int id;
@@ -65,6 +65,6 @@ public class Corredor {
     }
 
     public String toString(){
-        return "Corredor "+numero;
+        return "Corredor: "+numero;
     }
 }

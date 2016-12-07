@@ -94,9 +94,9 @@
 
   <Button
       android:layout_height="wrap_content"
-      android:text=" Limpiar "
+      android:text="Quitar"
       android:id="@+id/btnLimpiar"
-      android:onClick="limpiarSeleccion"
+      android:onClick="quitarUnidad"
       android:layout_width="wrap_content"
       android:layout_marginEnd="21dp"
       android:layout_alignEnd="@+id/spColectivosAgregados"
